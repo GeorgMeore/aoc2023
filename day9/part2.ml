@@ -5,7 +5,7 @@ let rec reduce_sequence seq =
 
 let first_element seq =
   match seq with
-  | []    -> raise (Failure "Empty list")
+  | []    -> failwith "Empty list"
   | x::_ -> x
 
 let rec all_zeroes seq =

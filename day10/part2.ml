@@ -14,7 +14,7 @@ let get_adjacent_positions maze pos =
     | 'J'       -> ((i, j - 1), (i - 1, j))
     | '7'       -> ((i, j - 1), (i + 1, j))
     | 'F' | 'S' -> ((i + 1, j), (i, j + 1)) (* S type was derived ad-hoc manually *)
-    | _         -> raise (Failure "Not a pipe")
+    | _         -> failwith "Not a pipe"
 
 let get_next_position maze curr prev =
   let (fst, snd) = get_adjacent_positions maze curr in
@@ -69,7 +69,7 @@ let rec split_in_columns points =
       if j = l
         then ((i, j)::(k, l)::rest)::cols
         else [(i, j)]::((k, l)::rest)::cols
-    | _ -> raise (Failure "Impossible")
+    | _ -> failwith "Impossible"
 
 let rec map f l =
   match l with
@@ -91,7 +91,7 @@ let rec contract_column maze points =
         if inside
           then (x1, y1)::(contract rest (not inside))
           else (x2, y2)::(contract rest (not inside))
-      | _ -> raise (Failure "Impossible")
+      | _ -> failwith "Impossible"
     )
     | _ -> []
   in
@@ -102,7 +102,7 @@ let rec column_area points =
   | [] -> 0
   | (x1, y1)::(x2, y2)::rest ->
     (x2 - x1 - 1) + (column_area rest)
-  | _ -> raise (Failure "Impossible")
+  | _ -> failwith "Impossible"
 
 let rec sum l =
   match l with

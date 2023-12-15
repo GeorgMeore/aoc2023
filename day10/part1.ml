@@ -14,7 +14,7 @@ let get_adjacent_positions maze pos =
     | 'J'       -> ((i, j - 1), (i - 1, j))
     | '7'       -> ((i, j - 1), (i + 1, j))
     | 'F' | 'S' -> ((i + 1, j), (i, j + 1)) (* S type was derived ad-hoc manually *)
-    | _         -> raise (Failure "Not a pipe")
+    | _         -> failwith "Not a pipe"
 
 let get_next_position maze curr prev =
   let (fst, snd) = get_adjacent_positions maze curr in

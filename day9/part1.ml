@@ -5,7 +5,7 @@ let rec reduce_sequence seq =
 
 let rec last_element seq =
   match seq with
-  | []    -> raise (Failure "Empty list")
+  | []    -> failwith "Empty list"
   | x::[] -> x
   | _::xs -> last_element xs
 
