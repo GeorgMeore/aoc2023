@@ -1,0 +1,12 @@
+These are my solutions to the problems from AOC 2023
+
+This code is not expected to be read by anyone but myself,
+but in case someone (for some weird reason) wants to,
+I'd like to make a couple of points about how I do AOC:
+
+1) I don't do clumsy `string.split`-kind-of parsing.
+   I just convert the input to a programming-language-specific representation.
+   It actually takes no more than a couple of seconds to do that with a decent editor.
+
+2) My solutions often are not the most general ones.
+   If I see a "dirty" shortcut - I take it (unless it's too dirty).
