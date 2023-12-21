@@ -14,8 +14,11 @@ int mins[NDIRECTIONS][NSTATES][SIZEX][SIZEY];
 
 #define MAX -1U>>1
 
-/* #define debug(args...) */
-#define debug(args...) printf(args)
+#if 1
+#	define debug(args...)
+#else
+#	define debug(args...) printf(args)
+#endif
 
 void setupmins()
 {
@@ -38,6 +41,7 @@ int mincost()
 }
 
 typedef struct {
+	int present;
 	int x;
 	int y;
 	int d;
@@ -47,6 +51,7 @@ typedef struct {
 
 void setpath(Path *p, int x, int y, int d, int loss, int step)
 {
+	p->present = 1;
 	p->x = x;
 	p->y = y;
 	p->d = d;
@@ -54,16 +59,47 @@ void setpath(Path *p, int x, int y, int d, int loss, int step)
 	p->step = step;
 }
 
+size_t phash(int x, int y, int d, int step)
+{
+	return x*5576257 + y*6798049 + d*11 + step*9;
+}
+
 typedef struct {
 	int  count;
+	int  indexes[SIZEX*SIZEY*NDIRECTIONS*NSTATES];
 	Path paths[SIZEX*SIZEY*NDIRECTIONS*NSTATES];
 } Pathset;
 
 Pathset first, second;
 
+#define LENGTH(arr) (sizeof(arr)/sizeof(arr[0]))
+
 void reset(Pathset *ps)
 {
+	size_t i;
 	ps->count = 0;
+	for (i = 0; i < LENGTH(ps->paths); i++)
+		ps->paths[i].present = 0;
+}
+
+Path *findpath(Pathset *ps, int x, int y, int d, int step)
+{
+	size_t hash = phash(x, y, d, step);
+	size_t i = hash % LENGTH(ps->paths);
+	while (ps->paths[i].present) {
+		if (ps->paths[i].x==x && ps->paths[i].y==y && ps->paths[i].d==d && ps->paths[i].step==step) {
+			return &ps->paths[i];
+		}
+		i = (i + 1) % LENGTH(ps->paths);
+	}
+	ps->indexes[ps->count] = i;
+	ps->count += 1;
+	return &ps->paths[i];
+}
+
+Path *getith(Pathset *ps, int i)
+{
+	return &ps->paths[ps->indexes[i]];
 }
 
 int stepcost(int x, int y, int d, int step)
@@ -80,19 +116,16 @@ int stepcost(int x, int y, int d, int step)
 		return map[x][y]+map[x-1][y]+map[x-2][y]+map[x-3][y];
 }
 
-void trace(int x, int y, int d, int loss, int step)
-{
-	debug(
-		"x=%d, y=%d, d=%c, loss=%d, step=%d\n",
-		x, y,
-		d == LEFT ? 'L' : d == RIGHT ? 'R' : d == UP ? 'U' : 'D',
-		loss, step
-	);
-}
+#define trace(x, y, d, loss, step) \
+	debug( \
+		"x=%d, y=%d, d=%c, loss=%d, step=%d\n",                   \
+		x, y,                                                     \
+		d == LEFT ? 'L' : d == RIGHT ? 'R' : d == UP ? 'U' : 'D', \
+		loss, step                                                \
+	)
 
 void addpath(Pathset *ps, int x, int y, int d, int loss, int step)
 {
-	int i;
 	Path *p;
 	if (x<0 || x>=SIZEX || y<0 || y>=SIZEY)
 		return;
@@ -103,14 +136,8 @@ void addpath(Pathset *ps, int x, int y, int d, int loss, int step)
 	if (loss > 9*(SIZEX + SIZEY) || loss >= mincost())
 		return;
 	trace(x, y, d, loss, step);
-	for (i = 0, p = ps->paths; i < ps->count; p++, i++) {
-		if (p->x==x && p->y==y && p->d==d && p->step==step) {
-			setpath(p, x, y, d, loss, step);
-			return;
-		}
-	}
+	p = findpath(ps, x, y, d, step);
 	setpath(p, x, y, d, loss, step);
-	ps->count += 1;
 }
 
 void addnexts(Pathset *ps, Path *p)
@@ -132,10 +159,9 @@ void addnexts(Pathset *ps, Path *p)
 	}
 }
 
-#define swap(x, y, type) { type tmp = x; x = y; y = tmp; }
+#define SWAP(x, y, type) { type tmp = x; x = y; y = tmp; }
 
-/* this thing is painfully slow - perhaps a hash table
- * should be used for pathsets */
+/* bfs without hashing runs painfully slow */
 void bfs(void)
 {
 	Pathset *curr = &first, *next = &second;
@@ -146,9 +172,9 @@ void bfs(void)
 		int i;
 		reset(next);
 		for (i = 0; i < curr->count; i++) {
-			addnexts(next, &curr->paths[i]);
+			addnexts(next, getith(curr, i));
 		}
-		swap(curr, next, Pathset*);
+		SWAP(curr, next, Pathset*);
 	}
 	printf("%d\n", mincost());
 }
@@ -181,7 +207,7 @@ void dfsexplore(int x, int y, int d, int loss, int step)
 	}
 }
 
-/* this is significantly faster */
+/* dfs this is significantly faster than bfs without hashing */
 void dfs(void)
 {
 	setupmins();
@@ -192,6 +218,6 @@ void dfs(void)
 
 int main(void)
 {
-	dfs();
+	bfs();
 	return 0;
 }
