@@ -20,7 +20,7 @@ int mins[NDIRECTIONS][NSTATES][SIZEX][SIZEY];
 #	define debug(args...) printf(args)
 #endif
 
-void setupmins()
+void setupmins(void)
 {
 	int i, j, k, l;
 	for (i = 0; i < NDIRECTIONS; i++)
@@ -30,7 +30,7 @@ void setupmins()
 		mins[i][j][k][l] = MAX;
 }
 
-int mincost()
+int mincost(void)
 {
 	int i, j, min = MAX;
 	for (i = 0; i < NDIRECTIONS; i++)
@@ -162,7 +162,7 @@ void addnexts(Pathset *ps, Path *p)
 #define SWAP(x, y, type) { type tmp = x; x = y; y = tmp; }
 
 /* bfs without hashing runs painfully slow */
-void bfs(void)
+int main(void)
 {
 	Pathset *curr = &first, *next = &second;
 	setupmins();
@@ -177,47 +177,5 @@ void bfs(void)
 		SWAP(curr, next, Pathset*);
 	}
 	printf("%d\n", mincost());
-}
-
-void dfsexplore(int x, int y, int d, int loss, int step)
-{
-	if (x<0 || x>=SIZEX || y<0 || y>=SIZEY)
-		return;
-	trace(x, y, d, loss, step);
-	loss += stepcost(x, y, d, step);
-	if (mins[d][step][x][y] <= loss)
-		return;
-	mins[d][step][x][y] = loss;
-	if (loss > 9*(SIZEX + SIZEY) || loss >= mincost())
-		return;
-	if (d == LEFT || d == RIGHT) {
-		dfsexplore(x - 4, y, UP,   loss, 6);
-		dfsexplore(x + 4, y, DOWN, loss, 6);
-		if (d == LEFT && step)
-			dfsexplore(x, y - 1, LEFT, loss, step - 1);
-		if (d == RIGHT && step)
-			dfsexplore(x, y + 1, RIGHT, loss, step - 1);
-	} else {
-		dfsexplore(x, y - 4, LEFT,  loss, 6);
-		dfsexplore(x, y + 4, RIGHT, loss, 6);
-		if (d == UP && step)
-			dfsexplore(x - 1, y, UP, loss, step - 1);
-		if (d == DOWN && step)
-			dfsexplore(x + 1, y, DOWN, loss, step - 1);
-	}
-}
-
-/* dfs this is significantly faster than bfs without hashing */
-void dfs(void)
-{
-	setupmins();
-	dfsexplore(0, 4, RIGHT, 0, 6);
-	dfsexplore(4, 0, DOWN, 0, 6);
-	printf("%d\n", mincost());
-}
-
-int main(void)
-{
-	bfs();
 	return 0;
 }
