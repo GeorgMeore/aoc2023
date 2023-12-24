@@ -1,2 +1,6 @@
 input.*
 input[1-2].*
+!*.o
+!*.hi
+!*.cmi
+!*.cmo
